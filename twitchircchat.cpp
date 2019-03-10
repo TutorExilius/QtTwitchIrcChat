@@ -86,6 +86,8 @@ bool TwitchIrcChat::connectToChannel( const QString &channel, const TwitchIrcCon
         QObject::connect( this->socket, &QTcpSocket::readyRead,
                           this, &TwitchIrcChat::timerStart,
                           Qt::UniqueConnection );
+
+        return true;
     }
     else
     {
