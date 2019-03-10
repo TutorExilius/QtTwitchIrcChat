@@ -24,7 +24,6 @@ TwitchIrcChat::~TwitchIrcChat()
     this->disconnectFromServer();
 }
 
-
 bool TwitchIrcChat::connectToChannel( const QString &channel, const TwitchIrcConnectionData &connectionData )
 {
     this->currentChannel = channel;
@@ -42,29 +41,55 @@ bool TwitchIrcChat::connectToChannel( const QString &channel, const TwitchIrcCon
     this->socket->connectToHost( connectionData.host, connectionData.port );
     qDebug() << "Connect to: " << connectionData.host << ":" << connectionData.port;
 
-    // Anweisung an den IRC Server, badges mitzusenden (twitch format)
-    this->send( "CAP REQ :twitch.tv/membership\r\nCAP REQ :twitch.tv/tags\r\nCAP REQ :twitch.tv/commands\r\n");
+    // ckeck socket connection
+    if( !this->socket->isOpen() )
+    {
+        // "socket"-connection failed
+        return false;
+    }
 
-    // Streamers OAutch Key
+    // authenticate with twicht server ---
+
+    // Streamers OAUTH Key
     this->send( "PASS " + connectionData.pass.toUtf8() + "\r\n" );
-
     // Streamers Nick
     this->send( "NICK " + lowerNick + "\r\n" );
 
-    // Join Channel
-    this->send( "JOIN #" + lowerChannel + "\r\n" );
+    // ---
 
-    if( this->socket->isOpen() )
+    // check first RPL_WELCOME (Numeric 001)
+    bool RPL_WELCOME_success = false;
+
+    if( this->socket->waitForReadyRead() )
     {
+        const QVector<QString> dataLines { this->getDataLines() };
+        for( const QString &dataLine : dataLines )
+        {
+            if( dataLine.startsWith( ":tmi.twitch.tv 001 " ) )
+            {
+                RPL_WELCOME_success = true;
+                break;
+            }
+        }
+    }
+
+    // join after RPL_WELCOME (Numeric 001)
+    if( RPL_WELCOME_success )
+    {
+        // Anweisung an den IRC Server, badges mitzusenden (twitch format)
+        this->send( "CAP REQ :twitch.tv/membership\r\nCAP REQ :twitch.tv/tags\r\nCAP REQ :twitch.tv/commands\r\n");
+
+        // Join Channel
+        this->send( "JOIN #" + lowerChannel + "\r\n" );
+
+
         QObject::connect( this->socket, &QTcpSocket::readyRead,
                           this, &TwitchIrcChat::timerStart,
                           Qt::UniqueConnection );
-
-        return true;
     }
     else
     {
-        // "socket"-connection failed
+        // handshake with server failed
         return false;
     }
 }
@@ -141,7 +166,6 @@ void TwitchIrcChat::timerStart()
 
     QObject::disconnect( this->socket, &QTcpSocket::readyRead,
                          this, &TwitchIrcChat::timerStart );
-
 
     QObject::connect( &this->timer, &QTimer::timeout,
                      this, &TwitchIrcChat::handleChannelJoin,
