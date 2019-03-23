@@ -6,6 +6,14 @@
 #include <QFile>
 #include <QRegularExpression>
 #include <QDebug>
+#include <QPair>
+
+enum class MESSAGE_TYPE
+{
+    PRIVMSG,
+    WHISPER,
+    SYSTEM
+};
 
 struct TwitchIrcConnectionData
 {
@@ -64,7 +72,7 @@ struct TwitchIrcConnectionData
         return TwitchIrcConnectionData{ "", "" };
     }
 
-    static QString extractMessage( const QString &line, const QString &nick )
+    static QPair<QString,MESSAGE_TYPE> extractMessage( const QString &line, const QString &nick )
     {
         QRegularExpression reg{ R"(^.*?PRIVMSG #.*? :)",
                                 QRegularExpression::DotMatchesEverythingOption };
@@ -86,7 +94,7 @@ struct TwitchIrcConnectionData
 
                 qDebug() << "[SYSTEM]" << message;
 
-                return message;
+                return QPair<QString,MESSAGE_TYPE>{ message, MESSAGE_TYPE::SYSTEM };
             }
             else // is WHISPER
             {
@@ -94,7 +102,7 @@ struct TwitchIrcConnectionData
 
                 qDebug() << "[WHISPER-MESSAGE]" << message;
 
-                return message;
+                return QPair<QString,MESSAGE_TYPE>{ message, MESSAGE_TYPE::WHISPER };
             }
         }
         else // is PRIVMSG
@@ -103,7 +111,7 @@ struct TwitchIrcConnectionData
 
             qDebug() << "[MESSAGE]" << message;
 
-            return message;
+            return QPair<QString,MESSAGE_TYPE>{ message, MESSAGE_TYPE::PRIVMSG };
         }
     }
 

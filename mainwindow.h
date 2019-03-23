@@ -17,11 +17,12 @@ class MainWindow : public QMainWindow, public TwitchChatSubscriber
 
 public:
     explicit MainWindow( QWidget *parent = nullptr );
-    ~MainWindow();
+    virtual ~MainWindow() override;
 
 private slots:
     void onTwitchIrcConnection();
-    void on_pushButton_clicked();
+
+    void on_pushButton_login_clicked();
 
 private:
     void update() override;

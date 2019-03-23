@@ -17,7 +17,7 @@ class TwitchIrcChat : public QObject
 
 public:
     explicit TwitchIrcChat( QObject *parent );
-    ~TwitchIrcChat();
+    virtual ~TwitchIrcChat() override;
 
     bool connectToChannel( const QString &channel, const TwitchIrcConnectionData &connectionData );
     void disconnectFromChannel( const QString &channel );

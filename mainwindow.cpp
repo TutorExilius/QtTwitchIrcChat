@@ -22,7 +22,7 @@ void MainWindow::onTwitchIrcConnection()
     this->twitchChat->subscribeChat( this );
 }
 
-void MainWindow::on_pushButton_clicked()
+void MainWindow::on_pushButton_login_clicked()
 {
     static bool alreadyConnected = false;
 
@@ -54,8 +54,9 @@ void MainWindow::readIrcChatData()
     for( const auto &line : readData )
     {
         const QString userName = TwitchIrcConnectionData::extractName( line ).toLower();
-        const QString message = TwitchIrcConnectionData::extractMessage( line, this->twitchChat->getCurrentUser() ).toLower();
+        const QPair<QString, MESSAGE_TYPE> messagePacket = TwitchIrcConnectionData::extractMessage( line, this->twitchChat->getCurrentUser() );
 
+        const QString message = messagePacket.first.toLower();
         qDebug() << userName << ": " << message;
 
     }
