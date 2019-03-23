@@ -64,17 +64,47 @@ struct TwitchIrcConnectionData
         return TwitchIrcConnectionData{ "", "" };
     }
 
-    static QString extractMessage( const QString &line )
+    static QString extractMessage( const QString &line, const QString &nick )
     {
         QRegularExpression reg{ R"(^.*?PRIVMSG #.*? :)",
                                 QRegularExpression::DotMatchesEverythingOption };
 
         QString message = line;
         message.remove( reg );
-        message.remove( "\r\n" );
 
-        qDebug() << "[MESSAGE]" << message;
-        return message;
+        // could net extract PRIVMSG, mybe a WHISPER?
+        if( message.size() == line.size() )
+        {
+            QRegularExpression reg{ R"(^.*?WHISPER )" + nick + R"(.*? :)",
+                                    QRegularExpression::DotMatchesEverythingOption };
+
+            message.remove( reg );
+
+            if( message.size() == line.size() )
+            {
+                message.remove( "\r\n" );
+
+                qDebug() << "[SYSTEM]" << message;
+
+                return message;
+            }
+            else // is WHISPER
+            {
+                message.remove( "\r\n" );
+
+                qDebug() << "[WHISPER-MESSAGE]" << message;
+
+                return message;
+            }
+        }
+        else // is PRIVMSG
+        {
+            message.remove( "\r\n" );
+
+            qDebug() << "[MESSAGE]" << message;
+
+            return message;
+        }
     }
 
     static QString extractName( const QString &line )

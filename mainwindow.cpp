@@ -54,7 +54,7 @@ void MainWindow::readIrcChatData()
     for( const auto &line : readData )
     {
         const QString userName = TwitchIrcConnectionData::extractName( line ).toLower();
-        const QString message = TwitchIrcConnectionData::extractMessage( line ).toLower();
+        const QString message = TwitchIrcConnectionData::extractMessage( line, this->twitchChat->getCurrentUser() ).toLower();
 
         qDebug() << userName << ": " << message;
 
